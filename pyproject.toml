@@ -1,0 +1,10 @@
+[project]
+name = "find-me-a-job"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "llama-index-llms-ollama>=0.3.3",
+    "llama-index>=0.11.14",
+]
