@@ -36,7 +36,7 @@ def config():
 
 
 def get_index() -> VectorStoreIndex:
-    if not os.path.exists(INDEX_PATH) or True:
+    if not os.path.exists(INDEX_PATH):
         index = VectorStoreIndex([])
         crawl_indeed(index=index, pages=1)
 
