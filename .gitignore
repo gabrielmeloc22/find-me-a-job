@@ -1,1 +1,4 @@
+*.pyc
 data
+input
+output
