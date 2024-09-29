@@ -5,11 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "flagembedding>=1.2.11",
     "llama-index-embeddings-huggingface>=0.3.1",
     "llama-index-llms-gemini>=0.3.5",
     "llama-index-llms-ollama>=0.3.3",
-    "llama-index-postprocessor-flag-embedding-reranker>=0.2.0",
     "llama-index-readers-web>=0.2.3",
     "llama-index>=0.11.14",
     "python-dotenv>=1.0.1",
