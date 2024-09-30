@@ -16,14 +16,16 @@ from output import create_output_file
 from resume import get_resume_path, get_resume_query, get_resume_str
 from utils import config
 
-
+# Inicializa configurações do programa
 config()
 
 nest_asyncio.apply()
 
+# Diretório onde os índices serão armazenados
 INDEX_DIR = "data"
 
-
+# Função para obter o índice de vetores (VectorStoreIndex) com base no currículo do usuário
+# Se o índice não existir, ele será criado a partir do crawling de páginas de empregos
 async def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
     filename = resume_filename.split(".")[0]
     resume_path = get_resume_path(resume_filename)
@@ -44,7 +46,7 @@ async def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
 
     return load_index_from_storage(storage_context)
 
-
+# Função para obter o currículo do usuário via input
 def get_resume_from_input() -> str:
     resume_filename = input(
         "Enter the filename of your resume: ")
@@ -55,7 +57,7 @@ def get_resume_from_input() -> str:
     except FileNotFoundError:
         print("File not found, please check the filename and try again.")
 
-
+# Função para obter o número de páginas a serem buscadas do usuário via input
 def get_pages_from_input() -> int:
     try:
         return int(input("What is the maximum number of web pages you want me to search for jobs? Enter a number: "))
@@ -66,22 +68,27 @@ def get_pages_from_input() -> int:
 async def main():
     print("Hello, im here to help you find an awesome job in no time! To continue, please copy your resume to the input folder and enter its filename\n")
 
+    # Solicita o currículo do usuário
     resume, resume_filename = get_resume_from_input()
 
     print(f"Great job, your resume was loaded successfully. Now, let's get started!\n")
 
+    # Solicita o número de páginas de busca
     page_num = get_pages_from_input()
 
+    # Obtém (ou cria) o índice de vetores com base no currículo e nas páginas buscadas
     index = await get_index(resume_filename=resume_filename, pages=page_num)
 
     print(f"Index created, searching for jobs that fit your resume...\n")
 
+    # Configura o recuperador de índices de vetores, definindo o número máximo de resultados similares
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=20,
         verbose=True
     )
 
+    # Define o template da resposta para formatar a lista de empregos de acordo com o currículo
     summary_template = PromptTemplate(
         """Given the context, the candidate resume and no other information:
         Context: {context_str}
@@ -96,6 +103,7 @@ async def main():
         Resume: {query_str}
         """)
 
+    # Configura o sintetizador de resposta com base no template e o tipo de saída esperado
     response_synthesizer = get_response_synthesizer(
         summary_template=summary_template,
         verbose=True,
@@ -103,6 +111,7 @@ async def main():
         use_async=True,  # use async calls for better performance
     )
 
+    # Cria o mecanismo de consulta com o recuperador e sintetizador configurados
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
         response_synthesizer=response_synthesizer,
@@ -113,13 +122,16 @@ async def main():
         ]
     )
 
+    # Executa a consulta com base no currículo do usuário
     result = query_engine.query(resume)
 
+    # Cria um arquivo de saída com a lista de empregos gerada
     file_path = create_output_file(result, resume_filename)
 
     print(f"Output file created at {file_path}\n")
     print("Here are some jobs that fit your resume:\n")
 
+    # Exibe a lista de empregos gerada
     print_job_list(result)
 
 

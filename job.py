@@ -17,7 +17,7 @@ class JobListing(BaseModel):
 class JobList(BaseModel):
     items: List[JobListing]
 
-
+# Printa a lista de jobs que se encaixam no resume
 def print_job_list(job_list: JobList, file=None):
     for job in job_list.items:
         print(

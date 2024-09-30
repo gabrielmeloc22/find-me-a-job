@@ -17,7 +17,9 @@ def get_llm_model() -> LLMType:
 
     return model
 
-
+# Carrega as configurações do arquivo .env,
+# define os modelos de embedding e llm,
+# e define as configurações do sistema
 def config():
     dotenv.load_dotenv()
 

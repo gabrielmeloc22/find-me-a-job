@@ -6,9 +6,10 @@ from utils import config
 
 config()
 
+# Diretório onde fica armazenado o arquivo de entrada
 INPUT_DIR = "input"
 
-
+# Retorna a query de busca para o arquivo de entrada
 def get_resume_query(resume_path: str) -> str:
     reader = SimpleDirectoryReader(input_files=[resume_path])
     documents = reader.load_data(show_progress=True)
@@ -25,11 +26,11 @@ def get_resume_query(resume_path: str) -> str:
 
     return clean
 
-
+# Retorna o caminho do arquivo de entrada
 def get_resume_path(resume_filename: str) -> str:
     return f"{INPUT_DIR}/{resume_filename}"
 
-
+# Retorna o conteúdo do arquivo de entrada
 def get_resume_str(resume_filename: str) -> str:
     resume_path = get_resume_path(resume_filename)
 
