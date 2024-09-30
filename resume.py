@@ -33,5 +33,5 @@ def get_resume_path(resume_filename: str) -> str:
 def get_resume_str(resume_filename: str) -> str:
     resume_path = get_resume_path(resume_filename)
 
-    with open(resume_path, "r") as f:
+    with open(resume_path, "r", encoding="utf-8") as f:
         return f.read()

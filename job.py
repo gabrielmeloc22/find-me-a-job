@@ -21,8 +21,4 @@ class JobList(BaseModel):
 def print_job_list(job_list: JobList, file=None):
     for job in job_list.items:
         print(
-            f"""
-            {job.title} ({job.fit})
-            Description: {job.description}
-            Reason:{job.fit_reason}
-            Link: {job.job_view_url}\n\n""", file=file)
+            f"""{job.title} ({job.fit})\nDescription: {job.description}\nReason: {job.fit_reason}\nLink: {job.job_view_url}\n\n""", file=file)
