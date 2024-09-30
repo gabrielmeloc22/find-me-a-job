@@ -1,5 +1,4 @@
 *.pyc
 data
-input
 output
 __pycache__
