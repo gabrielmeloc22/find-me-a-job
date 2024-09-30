@@ -1,4 +1,6 @@
 import os
+import asyncio
+import nest_asyncio
 
 from llama_index.core import (StorageContext, VectorStoreIndex,
                               get_response_synthesizer,
@@ -14,12 +16,15 @@ from output import create_output_file
 from resume import get_resume_path, get_resume_query, get_resume_str
 from utils import config
 
+
 config()
+
+nest_asyncio.apply()
 
 INDEX_DIR = "data"
 
 
-def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
+async def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
     filename = resume_filename.split(".")[0]
     resume_path = get_resume_path(resume_filename)
 
@@ -29,7 +34,7 @@ def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
         index = VectorStoreIndex([])
         search_query = get_resume_query(resume_path)
 
-        crawl_indeed(index=index, pages=pages, search_query=search_query)
+        await crawl_indeed(index=index, pages=pages, search_query=search_query)
 
         index.storage_context.persist(persist_dir=resume_index)
 
@@ -58,7 +63,7 @@ def get_pages_from_input() -> int:
         print("Please enter a valid number.")
 
 
-def main():
+async def main():
     print("Hello, im here to help you find an awesome job in no time! To continue, please copy your resume to the input folder and enter its filename\n")
 
     resume, resume_filename = get_resume_from_input()
@@ -67,7 +72,7 @@ def main():
 
     page_num = get_pages_from_input()
 
-    index = get_index(resume_filename=resume_filename, pages=page_num)
+    index = await get_index(resume_filename=resume_filename, pages=page_num)
 
     print(f"Index created, searching for jobs that fit your resume...\n")
 
@@ -78,20 +83,22 @@ def main():
     )
 
     summary_template = PromptTemplate(
-        """Given the context of jobs, the candidate resume and no other information:
+        """Given the context, the candidate resume and no other information:
         Context: {context_str}
 
         You should list all the jobs that fit the resume and return a JobList.
+        You should list as many jobs as possible and have a compelling reason to show why the job is a great fit.
         You should use the url on the document metadata, avoid using any url you find on the text content or to generate a url.
         You should create a brief description of the job
+        You should always refer to the applicant in the first person.
         You should use the similarity that you can find on the document to score and rank the jobs.
 
         Resume: {query_str}
         """)
 
     response_synthesizer = get_response_synthesizer(
-        response_mode="tree_summarize",
         summary_template=summary_template,
+        verbose=True,
         output_cls=JobList,
         use_async=True,  # use async calls for better performance
     )
@@ -117,4 +124,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
