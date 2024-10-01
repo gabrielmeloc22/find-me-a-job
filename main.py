@@ -1,6 +1,4 @@
 import os
-import asyncio
-import nest_asyncio
 
 from llama_index.core import (StorageContext, VectorStoreIndex,
                               get_response_synthesizer,
@@ -19,14 +17,13 @@ from utils import config
 # Inicializa configurações do programa
 config()
 
-nest_asyncio.apply()
-
 # Diretório onde os índices serão armazenados
 INDEX_DIR = "data"
 
-# Função para obter o índice de vetores (VectorStoreIndex) com base no currículo do usuário
-# Se o índice não existir, ele será criado a partir do crawling de páginas de empregos
-async def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
+
+def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
+    # Função para obter o índice de vetores (VectorStoreIndex) com base no currículo do usuário
+    # Se o índice não existir, ele será criado a partir do crawling de páginas de empregos
     filename = resume_filename.split(".")[0]
     resume_path = get_resume_path(resume_filename)
 
@@ -36,7 +33,7 @@ async def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
         index = VectorStoreIndex([])
         search_query = get_resume_query(resume_path)
 
-        await crawl_indeed(index=index, pages=pages, search_query=search_query)
+        crawl_indeed(index=index, pages=pages, search_query=search_query)
 
         index.storage_context.persist(persist_dir=resume_index)
 
@@ -46,8 +43,9 @@ async def get_index(resume_filename: str, pages: int = 1) -> VectorStoreIndex:
 
     return load_index_from_storage(storage_context)
 
-# Função para obter o currículo do usuário via input
+
 def get_resume_from_input() -> str:
+    # Função para obter o currículo do usuário via input
     resume_filename = input(
         "Enter the filename of your resume: ")
     try:
@@ -57,15 +55,16 @@ def get_resume_from_input() -> str:
     except FileNotFoundError:
         print("File not found, please check the filename and try again.")
 
-# Função para obter o número de páginas a serem buscadas do usuário via input
+
 def get_pages_from_input() -> int:
+    # Função para obter o número de páginas a serem buscadas do usuário via input
     try:
         return int(input("What is the maximum number of web pages you want me to search for jobs? Enter a number: "))
     except ValueError:
         print("Please enter a valid number.")
 
 
-async def main():
+def main():
     print("Hello, im here to help you find an awesome job in no time! To continue, please copy your resume to the input folder and enter its filename\n")
 
     # Solicita o currículo do usuário
@@ -77,15 +76,14 @@ async def main():
     page_num = get_pages_from_input()
 
     # Obtém (ou cria) o índice de vetores com base no currículo e nas páginas buscadas
-    index = await get_index(resume_filename=resume_filename, pages=page_num)
+    index = get_index(resume_filename=resume_filename, pages=page_num)
 
     print(f"Index created, searching for jobs that fit your resume...\n")
 
     # Configura o recuperador de índices de vetores, definindo o número máximo de resultados similares
     retriever = VectorIndexRetriever(
         index=index,
-        similarity_top_k=20,
-        verbose=True
+        similarity_top_k=50,
     )
 
     # Define o template da resposta para formatar a lista de empregos de acordo com o currículo
@@ -93,11 +91,9 @@ async def main():
         """Given the context, the candidate resume and no other information:
         Context: {context_str}
 
-        You should list all the jobs that fit the resume and return a JobList.
-        You should list as many jobs as possible and have a compelling reason to show why the job is a great fit.
+        You should return a JobList.
         You should use the url on the document metadata, avoid using any url you find on the text content or to generate a url.
         You should create a brief description of the job
-        You should always refer to the applicant in the first person.
         You should use the similarity that you can find on the document to score and rank the jobs.
 
         Resume: {query_str}
@@ -106,7 +102,7 @@ async def main():
     # Configura o sintetizador de resposta com base no template e o tipo de saída esperado
     response_synthesizer = get_response_synthesizer(
         summary_template=summary_template,
-        verbose=True,
+        response_mode='tree_summarize',
         output_cls=JobList,
         use_async=True,  # use async calls for better performance
     )
@@ -117,7 +113,7 @@ async def main():
         response_synthesizer=response_synthesizer,
         node_postprocessors=[
             SentenceTransformerRerank(
-                model="cross-encoder/ms-marco-MiniLM-L-2-v2", top_n=20
+                model="cross-encoder/ms-marco-MiniLM-L-2-v2", top_n=50
             )
         ]
     )
@@ -136,4 +132,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()
